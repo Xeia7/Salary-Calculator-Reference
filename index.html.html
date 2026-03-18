@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Calculator Pro</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 24px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #musicBtn {
+            position: absolute; top: 20px; right: 25px;
+            background: #f1f5f9; border: none; border-radius: 50%;
+            width: 40px; height: 40px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        h2 { text-align: center; color: var(--primary); margin-bottom: 1.5rem; font-weight: 800; }
+        .input-group { margin-bottom: 1rem; }
+        label { display: block; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 4px; }
+        input, select { width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 8px; font-size: 0.9rem; box-sizing: border-box; }
+
+        .result-box {
+            background: #f1f5f9; padding: 1.2rem; border-radius: 16px;
+            margin-top: 1.5rem; text-align: center; border: 1px solid var(--border);
+        }
+
+        .total-amount { font-size: 2rem; font-weight: 800; color: var(--primary); }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-print { flex: 2; background: #1e293b; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; display: none; }
+        .btn-reset { flex: 1; background: #ef4444; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+
+        /* PAYSLIP STYLING */
+        #payslip-output {
+            display: none; background: white; width: 100%; max-width: 500px;
+            padding: 40px; border: 1px solid #000;
+            font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #000;
+            margin-top: 20px;
+        }
+
+        .ps-header { text-align: center; margin-bottom: 20px; }
+        /* Updated Logo Styling */
+        .ps-logo { width: 80px; height: auto; margin-bottom: 10px; }
+        .ps-company { font-size: 20px; font-weight: bold; display: block; letter-spacing: 1px; }
+
+        .ps-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+        .ps-line { border-top: 1px solid #000; margin: 8px 0; }
+        .ps-bold { font-weight: bold; }
+        .ps-right { text-align: right; min-width: 100px; }
+
+        .ps-footer { margin-top: 30px; text-align: center; font-style: italic; border-top: 1px dashed #ccc; padding-top: 15px; line-height: 1.4; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #payslip-output, #payslip-output * { visibility: visible; }
+            #payslip-output { position: absolute; left: 0; top: 0; width: 100%; border: none; display: block !important; }
+        }
+    </style>
+</head>
+<body>
+
+<audio id="bgMusic" loop><source src="music.mp3" type="audio/mpeg"></audio>
+
+<div class="container">
+    <button id="musicBtn" onclick="toggleMusic()">🔇</button>
+    <h2>Paycheck Calcu</h2>
+    
+    <div class="input-group">
+        <label>Payroll Period</label>
+        <select id="period" onchange="calculate()">
+            <option value="mid">Mid-Month (No Gov Deductions)</option>
+            <option value="end">End of Month (₱1,100 Fixed Deduction)</option>
+        </select>
+    </div>
+
+    <div class="input-group"><label>Regular OT (Hours)</label><input type="number" id="regOT" value="0" oninput="calculate()"></div>
+    <div class="input-group"><label>Saturdays Worked (Rest Day)</label><input type="number" id="satOT" value="0" oninput="calculate()"></div>
+    <div class="input-group"><label>Sundays Worked (Rest Day)</label><input type="number" id="sunOT" value="0" oninput="calculate()"></div>
+    <div class="input-group"><label>Absents (Days)</label><input type="number" id="absents" value="0" step="0.5" oninput="calculate()"></div>
+    <div class="input-group"><label>Added Allowance</label><input type="number" id="allowance" value="0" oninput="calculate()"></div>
+
+    <hr style="border: 0; border-top: 1px dashed var(--border); margin: 20px 0;">
+
+    <label style="cursor:pointer; color:var(--primary); font-weight:bold; display:block; margin-bottom:10px;">
+        <input type="checkbox" id="wantPayslip" onchange="togglePersonalFields()"> Generate Detailed Payslip?
+    </label>
+
+    <div id="personalDetails" style="display:none;">
+        <div class="input-group"><label>Full Name</label><input type="text" id="empName" placeholder="Enter full name" oninput="calculate()"></div>
+        <div class="input-group"><label>Employee ID</label><input type="text" id="empID" placeholder="Enter ID" oninput="calculate()"></div>
+        <div class="input-group"><label>Payout Date</label><input type="date" id="payoutDate" oninput="calculate()"></div>
+    </div>
+
+    <div class="result-box">
+        <div style="font-size: 0.75rem; font-weight: bold; color: #64748b; text-transform: uppercase;">Estimated Net Pay</div>
+        <div class="total-amount" id="totalDisplay">₱ 0.00</div>
+    </div>
+
+    <div class="btn-group">
+        <button id="btnPrint" class="btn-print" onclick="window.print()">Print Payslip</button>
+        <button class="btn-reset" onclick="resetForm()">Reset</button>
+    </div>
+</div>
+
+<div id="payslip-output">
+    <div class="ps-header">
+        <img src="logo.png" alt="CYBR Logo" class="ps-logo">
+        <span class="ps-company">CYBR, Inc.</span>
+    </div>
+
+    <div class="ps-row"><span>Payout Date</span><span id="out-date">--/--/----</span></div>
+    <div class="ps-row"><span>Employee Number</span><span id="out-id">---</span></div>
+    <div class="ps-row"><span>Name</span><span id="out-name" class="ps-bold">---</span></div>
+    <br>
+    <div class="ps-row"><span>Semi-monthly Pay</span><span>₱ 5,981.25</span><span class="ps-right">0.00</span></div>
+    <div class="ps-row"><span>Regular OT: <span id="out-ot-hrs">0</span> Hrs</span><span id="out-ot-amt" class="ps-right">0.00</span></div>
+    <div class="ps-row"><span>Rest Day OT</span><span id="out-rd-amt" class="ps-right">0.00</span></div>
+    <div class="ps-row"><span>Absent/Tardiness</span><span id="out-absent-amt" class="ps-right">0.00</span></div>
+    <div class="ps-row ps-bold"><span>Gross Income</span><span id="out-gross" class="ps-right">0.00</span></div>
+    
+    <div class="ps-line"></div>
+    <div class="ps-bold">Less: Deductions</div>
+    <div class="ps-row"><span>SSS Regular Contribution</span><span id="out-sss" class="ps-right">0.00</span></div>
+    <div class="ps-row"><span>PhilHealth</span><span id="out-ph" class="ps-right">0.00</span></div>
+    <div class="ps-row"><span>Pag-IBIG</span><span id="out-pagibig" class="ps-right">0.00</span></div>
+    <div class="ps-row ps-bold"><span>Net Pay</span><span id="out-net" class="ps-right">0.00</span></div>
+    
+    <div class="ps-line"></div>
+    <div class="ps-bold">Add: Allowances</div>
+    <div class="ps-row"><span>Total Allowances</span><span id="out-allowance" class="ps-right">0.00</span></div>
+    <br>
+    <div class="ps-line"></div>
+    <div class="ps-row ps-bold" style="font-size: 14px;"><span>Final Pay</span><span id="out-final" class="ps-right">0.00</span></div>
+    
+    <div class="ps-footer">
+        Thank you for your time and effort in working with CYBR, Inc.<br>
+        We appreciate your dedication!
+    </div>
+</div>
+
+<script>
+    const music = document.getElementById('bgMusic');
+    function toggleMusic() { 
+        if (music.paused) { music.play(); music.volume = 0.4; document.getElementById('musicBtn').innerText = "🔊"; } 
+        else { music.pause(); document.getElementById('musicBtn').innerText = "🔇"; }
+    }
+
+    function togglePersonalFields() {
+        const check = document.getElementById('wantPayslip').checked;
+        document.getElementById('personalDetails').style.display = check ? 'block' : 'none';
+        document.getElementById('payslip-output').style.display = check ? 'block' : 'none';
+        document.getElementById('btnPrint').style.display = check ? 'block' : 'none';
+        calculate();
+    }
+
+    function resetForm() {
+        document.getElementById('regOT').value = 0;
+        document.getElementById('satOT').value = 0;
+        document.getElementById('sunOT').value = 0;
+        document.getElementById('absents').value = 0;
+        document.getElementById('allowance').value = 0;
+        document.getElementById('empName').value = "";
+        document.getElementById('empID').value = "";
+        document.getElementById('payoutDate').value = "";
+        document.getElementById('period').value = 'mid';
+        document.getElementById('wantPayslip').checked = false;
+        togglePersonalFields();
+        calculate();
+    }
+
+    function calculate() {
+        const basicSemi = 5981.25;
+        const regRate = 85.9375;
+        const satRate = 715; 
+        const sunRate = 915;
+        const fullDayDeduction = 550;
+        const halfDayDeduction = 225;
+
+        const regOT = parseFloat(document.getElementById('regOT').value) || 0;
+        const satDays = parseFloat(document.getElementById('satOT').value) || 0;
+        const sunDays = parseFloat(document.getElementById('sunOT').value) || 0;
+        const absents = parseFloat(document.getElementById('absents').value) || 0;
+        const allowanceValue = parseFloat(document.getElementById('allowance').value) || 0;
+
+        const isEndMonth = document.getElementById('period').value === 'end';
+        const sss = isEndMonth ? 575.00 : 0;
+        const ph = isEndMonth ? 290.10 : 0;
+        const pi = isEndMonth ? 234.90 : 0;
+        const totalGov = sss + ph + pi;
+
+        const fullDays = Math.floor(absents);
+        const hasHalfDay = (absents % 1 !== 0);
+        const absentTotal = (fullDays * fullDayDeduction) + (hasHalfDay ? halfDayDeduction : 0);
+
+        const otPay = regOT * regRate;
+        const rdPay = (satDays * satRate) + (sunDays * sunRate);
+        
+        const gross = (basicSemi - absentTotal) + otPay + rdPay;
+        const netPay = (gross - totalGov) + allowanceValue;
+
+        document.getElementById('totalDisplay').innerText = "₱ " + netPay.toLocaleString('en-PH', {minimumFractionDigits: 2});
+
+        if(document.getElementById('wantPayslip').checked) {
+            document.getElementById('out-name').innerText = document.getElementById('empName').value || "---";
+            document.getElementById('out-id').innerText = document.getElementById('empID').value || "---";
+            document.getElementById('out-date').innerText = document.getElementById('payoutDate').value || "--/--/----";
+            
+            document.getElementById('out-ot-hrs').innerText = regOT;
+            document.getElementById('out-ot-amt').innerText = otPay.toFixed(2);
+            document.getElementById('out-rd-amt').innerText = rdPay.toFixed(2);
+            document.getElementById('out-absent-amt').innerText = "-" + absentTotal.toFixed(2);
+            document.getElementById('out-gross').innerText = gross.toFixed(2);
+            document.getElementById('out-sss').innerText = sss.toFixed(2);
+            document.getElementById('out-ph').innerText = ph.toFixed(2);
+            document.getElementById('out-pagibig').innerText = pi.toFixed(2);
+            document.getElementById('out-net').innerText = (gross - totalGov).toFixed(2);
+            document.getElementById('out-allowance').innerText = allowanceValue.toFixed(2);
+            document.getElementById('out-final').innerText = netPay.toFixed(2);
+        }
+    }
+    window.onload = calculate;
+</script>
+</body>
+</html>
