@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Salary Calculator Pro</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    
     <style>
         :root {
             --primary: #6366f1;
@@ -60,19 +62,20 @@
         /* PAYSLIP STYLING */
         #payslip-output {
             display: none; background: white; width: 100%; max-width: 500px;
-            padding: 40px; border: 1px solid #000;
-            font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #000;
-            margin-top: 20px;
+            padding: 40px; border: 1px solid #ccc;
+            font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #000;
+            margin-top: 20px; line-height: 1.3;
         }
 
-        .ps-header { text-align: center; margin-bottom: 20px; }
-        .ps-logo { width: 80px; height: auto; margin-bottom: 10px; }
-        .ps-company { font-size: 20px; font-weight: bold; display: block; letter-spacing: 1px; }
-        .ps-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
-        .ps-line { border-top: 1px solid #000; margin: 8px 0; }
+        .ps-logo-container { text-align: center; margin-bottom: 15px; }
+        .ps-logo { width: 70px; height: auto; }
+        
+        .ps-row { display: grid; grid-template-columns: 2.2fr 1fr 1fr; margin-bottom: 2px; }
+        .ps-header-row { display: flex; margin-bottom: 4px; }
+        .ps-label { width: 160px; }
+        .ps-line { border-top: 1px solid #000; margin: 10px 0; }
         .ps-bold { font-weight: bold; }
-        .ps-right { text-align: right; min-width: 100px; }
-        .ps-footer { margin-top: 30px; text-align: center; font-style: italic; border-top: 1px dashed #ccc; padding-top: 15px; line-height: 1.4; }
+        .ps-right { text-align: right; }
 
         @media print {
             body * { visibility: hidden; }
@@ -87,7 +90,7 @@
 
 <div class="container">
     <button id="musicBtn" onclick="toggleMusic()">🔇</button>
-    <h2>Paycheck Calcu</h2>
+    <h2>Payslip Calculator</h2>
     
     <div class="input-group">
         <label>Payroll Period</label>
@@ -100,10 +103,8 @@
     <div class="input-group"><label>Regular OT (Hours)</label><input type="number" id="regOT" value="0" oninput="calculate()"></div>
     <div class="input-group"><label>Saturdays Worked (Rest Day)</label><input type="number" id="satOT" value="0" oninput="calculate()"></div>
     <div class="input-group"><label>Sundays Worked (Rest Day)</label><input type="number" id="sunOT" value="0" oninput="calculate()"></div>
-    
-    <div class="input-group"><label>Regular Holiday (Days Worked)</label><input type="number" id="regHoliday" value="0" oninput="calculate()"></div>
-    <div class="input-group"><label>Special Non-Working Holiday (Days Worked)</label><input type="number" id="specHoliday" value="0" oninput="calculate()"></div>
-    
+    <div class="input-group"><label>Regular Holiday (Days)</label><input type="number" id="regHol" value="0" oninput="calculate()"></div>
+    <div class="input-group"><label>Special Non-Working Holiday (Days)</label><input type="number" id="specHol" value="0" oninput="calculate()"></div>
     <div class="input-group"><label>Absents (Days)</label><input type="number" id="absents" value="0" step="0.5" oninput="calculate()"></div>
     <div class="input-group"><label>Added Allowance</label><input type="number" id="allowance" value="0" oninput="calculate()"></div>
 
@@ -131,39 +132,46 @@
 </div>
 
 <div id="payslip-output">
-    <div class="ps-header">
-        <img src="logo.png" alt="Logo" class="ps-logo">
-        <span class="ps-company">CYBR, Inc.</span>
+    <div class="ps-logo-container">
+        <img src="logo.png" alt="CYBR Logo" class="ps-logo">
+        <div class="ps-bold" style="font-size: 16px; margin-top: 5px;">CYBR, Inc.</div>
     </div>
 
-    <div class="ps-row"><span>Payout Date</span><span id="out-date">--/--/----</span></div>
-    <div class="ps-row"><span>Employee Number</span><span id="out-id">---</span></div>
-    <div class="ps-row"><span>Name</span><span id="out-name" class="ps-bold">---</span></div>
+    <div class="ps-header-row"><span class="ps-label">Payout Date</span><span id="out-date">--/--/----</span></div>
+    <div class="ps-header-row"><span class="ps-label">Employee Number</span><span id="out-id">---</span></div>
+    <div class="ps-header-row"><span class="ps-label">Name</span><span id="out-name" class="ps-bold">---</span></div>
+    
     <br>
+    <div class="ps-row"><span>Basic Pay</span><span>₱ 11,962.50</span><span class="ps-right">0.00</span></div>
     <div class="ps-row"><span>Semi-monthly Pay</span><span>₱ 5,981.25</span><span class="ps-right">0.00</span></div>
-    <div class="ps-row"><span>Regular OT: <span id="out-ot-hrs">0</span> Hrs</span><span id="out-ot-amt" class="ps-right">0.00</span></div>
-    <div class="ps-row"><span>Rest Day OT</span><span id="out-rd-amt" class="ps-right">0.00</span></div>
-    <div class="ps-row"><span>Holiday Pay</span><span id="out-holiday-amt" class="ps-right">0.00</span></div>
-    <div class="ps-row"><span>Absent/Tardiness</span><span id="out-absent-amt" class="ps-right">0.00</span></div>
-    <div class="ps-row ps-bold"><span>Gross Income</span><span id="out-gross" class="ps-right">0.00</span></div>
+    
+    <div class="ps-row"><span>Regular OT: <span id="out-ot-hrs">0</span> Hrs</span><span></span><span id="out-ot-amt" class="ps-right">0.00</span></div>
+    <div class="ps-row"><span>Rest Day OT</span><span></span><span id="out-rd-amt" class="ps-right">0.00</span></div>
+    <div class="ps-row"><span>Regular Holiday</span><span></span><span id="out-reg-hol" class="ps-right">0.00</span></div>
+    <div class="ps-row"><span>Special non-working Holiday</span><span></span><span id="out-spec-hol" class="ps-right">0.00</span></div>
+    <div class="ps-row"><span>Absent/Forced Leave</span><span></span><span id="out-absent-amt" class="ps-right">0.00</span></div>
+    
+    <div class="ps-row ps-bold"><span>Gross Income</span><span></span><span id="out-gross" class="ps-right">0.00</span></div>
     
     <div class="ps-line"></div>
     <div class="ps-bold">Less: Deductions</div>
-    <div class="ps-row"><span>SSS Regular Contribution</span><span id="out-sss" class="ps-right">0.00</span></div>
-    <div class="ps-row"><span>PhilHealth</span><span id="out-ph" class="ps-right">0.00</span></div>
-    <div class="ps-row"><span>Pag-IBIG</span><span id="out-pagibig" class="ps-right">0.00</span></div>
-    <div class="ps-row ps-bold"><span>Net Pay</span><span id="out-net" class="ps-right">0.00</span></div>
+    <div class="ps-row"><span>SSS Regular Contribution</span><span>₱</span><span id="out-sss" class="ps-right">0.00</span></div>
+    <div class="ps-row"><span>PhilHealth</span><span>₱</span><span id="out-ph" class="ps-right">0.00</span></div>
+    <div class="ps-row"><span>Pag-IBIG</span><span>₱</span><span id="out-pagibig" class="ps-right">0.00</span></div>
     
+    <div class="ps-row ps-bold"><span>Total Deductions</span><span></span><span id="out-total-deduct" class="ps-right">0.00</span></div>
+    <div class="ps-row ps-bold" style="margin-top:10px;"><span>Net Pay</span><span>₱</span><span id="out-net" class="ps-right">0.00</span></div>
+
+    <div id="ps-allowance-section" style="display:none;">
+        <div class="ps-line"></div>
+        <div class="ps-bold">Add:</div>
+        <div class="ps-row"><span>Total Allowances</span><span>₱</span><span id="out-allowance" class="ps-right">0.00</span></div>
+        <div class="ps-row ps-bold"><span>Total with Allowances</span><span>₱</span><span id="out-total-allowance" class="ps-right">0.00</span></div>
+    </div>
+
     <div class="ps-line"></div>
-    <div class="ps-bold">Add: Allowances</div>
-    <div class="ps-row"><span>Total Allowances</span><span id="out-allowance" class="ps-right">0.00</span></div>
-    <br>
-    <div class="ps-line"></div>
-    <div class="ps-row ps-bold" style="font-size: 14px;"><span>Final Pay</span><span id="out-final" class="ps-right">0.00</span></div>
-    
-    <div class="ps-footer">
-        Thank you for your time and effort in working with CYBR, Inc.<br>
-        We appreciate your dedication!
+    <div class="ps-row ps-bold" style="font-size: 15px; border-bottom: 2px solid #000; padding-bottom: 5px;">
+        <span>Final Pay</span><span>₱</span><span id="out-final" class="ps-right">0.00</span>
     </div>
 </div>
 
@@ -186,8 +194,8 @@
         document.getElementById('regOT').value = 0;
         document.getElementById('satOT').value = 0;
         document.getElementById('sunOT').value = 0;
-        document.getElementById('regHoliday').value = 0;
-        document.getElementById('specHoliday').value = 0;
+        document.getElementById('regHol').value = 0;
+        document.getElementById('specHol').value = 0;
         document.getElementById('absents').value = 0;
         document.getElementById('allowance').value = 0;
         document.getElementById('empName').value = "";
@@ -204,18 +212,14 @@
         const regRate = 85.9375;
         const satRate = 715; 
         const sunRate = 915;
-        const fullDayDeduction = 550;
-        const halfDayDeduction = 225;
-
-        // Holiday Rates
-        const regHolidayDaily = 550; // Regular Holiday adds 550
-        const specHolidayDaily = 550 * 0.30; // Special Non-working adds 30% of 550
+        const dailyRate = 550;
+        const specHolidayDaily = 550 * 0.30; 
 
         const regOT = parseFloat(document.getElementById('regOT').value) || 0;
         const satDays = parseFloat(document.getElementById('satOT').value) || 0;
         const sunDays = parseFloat(document.getElementById('sunOT').value) || 0;
-        const regHolidayDays = parseFloat(document.getElementById('regHoliday').value) || 0;
-        const specHolidayDays = parseFloat(document.getElementById('specHoliday').value) || 0;
+        const regHolDays = parseFloat(document.getElementById('regHol').value) || 0;
+        const specHolDays = parseFloat(document.getElementById('specHol').value) || 0;
         const absents = parseFloat(document.getElementById('absents').value) || 0;
         const allowanceValue = parseFloat(document.getElementById('allowance').value) || 0;
 
@@ -225,36 +229,52 @@
         const pi = isEndMonth ? 234.90 : 0;
         const totalGov = sss + ph + pi;
 
-        const fullDays = Math.floor(absents);
-        const hasHalfDay = (absents % 1 !== 0);
-        const absentTotal = (fullDays * fullDayDeduction) + (hasHalfDay ? halfDayDeduction : 0);
-
+        const absentTotal = absents * dailyRate;
         const otPay = regOT * regRate;
         const rdPay = (satDays * satRate) + (sunDays * sunRate);
-        const holidayPay = (regHolidayDays * regHolidayDaily) + (specHolidayDays * specHolidayDaily);
+        const regHolPay = regHolDays * dailyRate;
+        const specHolPay = specHolDays * specHolidayDaily;
         
-        const gross = (basicSemi - absentTotal) + otPay + rdPay + holidayPay;
-        const netPay = (gross - totalGov) + allowanceValue;
+        const gross = (basicSemi - absentTotal) + otPay + rdPay + regHolPay + specHolPay;
+        const netPay = gross - totalGov;
+        const finalPay = netPay + allowanceValue;
 
-        document.getElementById('totalDisplay').innerText = "₱ " + netPay.toLocaleString('en-PH', {minimumFractionDigits: 2});
+        document.getElementById('totalDisplay').innerText = "₱ " + finalPay.toLocaleString('en-PH', {minimumFractionDigits: 2});
 
         if(document.getElementById('wantPayslip').checked) {
             document.getElementById('out-name').innerText = document.getElementById('empName').value || "---";
             document.getElementById('out-id').innerText = document.getElementById('empID').value || "---";
-            document.getElementById('out-date').innerText = document.getElementById('payoutDate').value || "--/--/----";
             
+            let dateInput = document.getElementById('payoutDate').value;
+            if(dateInput) {
+                let d = new Date(dateInput);
+                document.getElementById('out-date').innerText = (d.getMonth()+1).toString().padStart(2, '0') + '/' + d.getDate().toString().padStart(2, '0') + '/' + d.getFullYear();
+            }
+
             document.getElementById('out-ot-hrs').innerText = regOT;
             document.getElementById('out-ot-amt').innerText = otPay.toFixed(2);
             document.getElementById('out-rd-amt').innerText = rdPay.toFixed(2);
-            document.getElementById('out-holiday-amt').innerText = holidayPay.toFixed(2);
-            document.getElementById('out-absent-amt').innerText = "-" + absentTotal.toFixed(2);
-            document.getElementById('out-gross').innerText = gross.toFixed(2);
+            document.getElementById('out-reg-hol').innerText = regHolPay.toFixed(2);
+            document.getElementById('out-spec-hol').innerText = specHolPay.toFixed(2);
+            document.getElementById('out-absent-amt').innerText = (absentTotal > 0 ? "-" : "") + absentTotal.toFixed(2);
+            document.getElementById('out-gross').innerText = gross.toLocaleString('en-PH', {minimumFractionDigits: 2});
+            
             document.getElementById('out-sss').innerText = sss.toFixed(2);
             document.getElementById('out-ph').innerText = ph.toFixed(2);
             document.getElementById('out-pagibig').innerText = pi.toFixed(2);
-            document.getElementById('out-net').innerText = (gross - totalGov).toFixed(2);
-            document.getElementById('out-allowance').innerText = allowanceValue.toFixed(2);
-            document.getElementById('out-final').innerText = netPay.toFixed(2);
+            document.getElementById('out-total-deduct').innerText = totalGov.toFixed(2);
+            document.getElementById('out-net').innerText = netPay.toLocaleString('en-PH', {minimumFractionDigits: 2});
+            
+            const allowanceSection = document.getElementById('ps-allowance-section');
+            if(allowanceValue > 0) {
+                allowanceSection.style.display = 'block';
+                document.getElementById('out-allowance').innerText = allowanceValue.toFixed(2);
+                document.getElementById('out-total-allowance').innerText = finalPay.toLocaleString('en-PH', {minimumFractionDigits: 2});
+            } else {
+                allowanceSection.style.display = 'none';
+            }
+            
+            document.getElementById('out-final').innerText = finalPay.toLocaleString('en-PH', {minimumFractionDigits: 2});
         }
     }
     window.onload = calculate;
