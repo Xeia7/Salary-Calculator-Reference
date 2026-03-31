@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salary Calculator Reference</title>
-    <link rel="icon" type="image/png" href="logo.png">
-    
+    <title>Salary Calculator Pro</title>
     <style>
         :root {
             --primary: #6366f1;
@@ -68,15 +66,12 @@
         }
 
         .ps-header { text-align: center; margin-bottom: 20px; }
-        /* Updated Logo Styling */
         .ps-logo { width: 80px; height: auto; margin-bottom: 10px; }
         .ps-company { font-size: 20px; font-weight: bold; display: block; letter-spacing: 1px; }
-
         .ps-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
         .ps-line { border-top: 1px solid #000; margin: 8px 0; }
         .ps-bold { font-weight: bold; }
         .ps-right { text-align: right; min-width: 100px; }
-
         .ps-footer { margin-top: 30px; text-align: center; font-style: italic; border-top: 1px dashed #ccc; padding-top: 15px; line-height: 1.4; }
 
         @media print {
@@ -92,19 +87,23 @@
 
 <div class="container">
     <button id="musicBtn" onclick="toggleMusic()">🔇</button>
-    <h2>Salary Calculator Reference</h2>
+    <h2>Paycheck Calcu</h2>
     
     <div class="input-group">
         <label>Payroll Period</label>
         <select id="period" onchange="calculate()">
             <option value="mid">Mid-Month (No Gov Deductions)</option>
-            <option value="end">End of Month (With Gov Deductions)</option>
+            <option value="end">End of Month (₱1,100 Fixed Deduction)</option>
         </select>
     </div>
 
     <div class="input-group"><label>Regular OT (Hours)</label><input type="number" id="regOT" value="0" oninput="calculate()"></div>
     <div class="input-group"><label>Saturdays Worked (Rest Day)</label><input type="number" id="satOT" value="0" oninput="calculate()"></div>
     <div class="input-group"><label>Sundays Worked (Rest Day)</label><input type="number" id="sunOT" value="0" oninput="calculate()"></div>
+    
+    <div class="input-group"><label>Regular Holiday (Days Worked)</label><input type="number" id="regHoliday" value="0" oninput="calculate()"></div>
+    <div class="input-group"><label>Special Non-Working Holiday (Days Worked)</label><input type="number" id="specHoliday" value="0" oninput="calculate()"></div>
+    
     <div class="input-group"><label>Absents (Days)</label><input type="number" id="absents" value="0" step="0.5" oninput="calculate()"></div>
     <div class="input-group"><label>Added Allowance</label><input type="number" id="allowance" value="0" oninput="calculate()"></div>
 
@@ -133,7 +132,7 @@
 
 <div id="payslip-output">
     <div class="ps-header">
-        <img src="logo.png" alt="CYBR Logo" class="ps-logo">
+        <img src="logo.png" alt="Logo" class="ps-logo">
         <span class="ps-company">CYBR, Inc.</span>
     </div>
 
@@ -144,6 +143,7 @@
     <div class="ps-row"><span>Semi-monthly Pay</span><span>₱ 5,981.25</span><span class="ps-right">0.00</span></div>
     <div class="ps-row"><span>Regular OT: <span id="out-ot-hrs">0</span> Hrs</span><span id="out-ot-amt" class="ps-right">0.00</span></div>
     <div class="ps-row"><span>Rest Day OT</span><span id="out-rd-amt" class="ps-right">0.00</span></div>
+    <div class="ps-row"><span>Holiday Pay</span><span id="out-holiday-amt" class="ps-right">0.00</span></div>
     <div class="ps-row"><span>Absent/Tardiness</span><span id="out-absent-amt" class="ps-right">0.00</span></div>
     <div class="ps-row ps-bold"><span>Gross Income</span><span id="out-gross" class="ps-right">0.00</span></div>
     
@@ -186,6 +186,8 @@
         document.getElementById('regOT').value = 0;
         document.getElementById('satOT').value = 0;
         document.getElementById('sunOT').value = 0;
+        document.getElementById('regHoliday').value = 0;
+        document.getElementById('specHoliday').value = 0;
         document.getElementById('absents').value = 0;
         document.getElementById('allowance').value = 0;
         document.getElementById('empName').value = "";
@@ -205,9 +207,15 @@
         const fullDayDeduction = 550;
         const halfDayDeduction = 225;
 
+        // Holiday Rates
+        const regHolidayDaily = 550; // Regular Holiday adds 550
+        const specHolidayDaily = 550 * 0.30; // Special Non-working adds 30% of 550
+
         const regOT = parseFloat(document.getElementById('regOT').value) || 0;
         const satDays = parseFloat(document.getElementById('satOT').value) || 0;
         const sunDays = parseFloat(document.getElementById('sunOT').value) || 0;
+        const regHolidayDays = parseFloat(document.getElementById('regHoliday').value) || 0;
+        const specHolidayDays = parseFloat(document.getElementById('specHoliday').value) || 0;
         const absents = parseFloat(document.getElementById('absents').value) || 0;
         const allowanceValue = parseFloat(document.getElementById('allowance').value) || 0;
 
@@ -223,8 +231,9 @@
 
         const otPay = regOT * regRate;
         const rdPay = (satDays * satRate) + (sunDays * sunRate);
+        const holidayPay = (regHolidayDays * regHolidayDaily) + (specHolidayDays * specHolidayDaily);
         
-        const gross = (basicSemi - absentTotal) + otPay + rdPay;
+        const gross = (basicSemi - absentTotal) + otPay + rdPay + holidayPay;
         const netPay = (gross - totalGov) + allowanceValue;
 
         document.getElementById('totalDisplay').innerText = "₱ " + netPay.toLocaleString('en-PH', {minimumFractionDigits: 2});
@@ -237,6 +246,7 @@
             document.getElementById('out-ot-hrs').innerText = regOT;
             document.getElementById('out-ot-amt').innerText = otPay.toFixed(2);
             document.getElementById('out-rd-amt').innerText = rdPay.toFixed(2);
+            document.getElementById('out-holiday-amt').innerText = holidayPay.toFixed(2);
             document.getElementById('out-absent-amt').innerText = "-" + absentTotal.toFixed(2);
             document.getElementById('out-gross').innerText = gross.toFixed(2);
             document.getElementById('out-sss').innerText = sss.toFixed(2);
