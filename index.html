@@ -101,6 +101,8 @@
     </div>
 
     <div class="input-group"><label>Regular OT (Hours)</label><input type="number" id="regOT" value="0" oninput="calculate()"></div>
+    <div class="input-group"><label>6th Day OT Excess (Hours)</label><input type="number" id="sixOT" value="0" oninput="calculate()"></div>
+    <div class="input-group"><label>7th Day OT Excess (Hours)</label><input type="number" id="sevenOT" value="0" oninput="calculate()"></div>
     <div class="input-group"><label>Saturdays Worked (Rest Day)</label><input type="number" id="satOT" value="0" oninput="calculate()"></div>
     <div class="input-group"><label>Sundays Worked (Rest Day)</label><input type="number" id="sunOT" value="0" oninput="calculate()"></div>
     <div class="input-group"><label>Regular Holiday (Days)</label><input type="number" id="regHol" value="0" oninput="calculate()"></div>
@@ -146,6 +148,8 @@
     <div class="ps-row"><span>Semi-monthly Pay</span><span>₱ 5,981.25</span><span class="ps-right">0.00</span></div>
     
     <div class="ps-row"><span>Regular OT: <span id="out-ot-hrs">0</span> Hrs</span><span></span><span id="out-ot-amt" class="ps-right">0.00</span></div>
+    <div class="ps-row"><span>6th Day OT Excess: <span id="out-six-hrs">0</span> Hrs</span><span></span><span id="out-six-amt" class="ps-right">0.00</span></div>
+    <div class="ps-row"><span>7th Day OT Excess: <span id="out-seven-hrs">0</span> Hrs</span><span></span><span id="out-seven-amt" class="ps-right">0.00</span></div>
     <div class="ps-row"><span>Rest Day OT</span><span></span><span id="out-rd-amt" class="ps-right">0.00</span></div>
     <div class="ps-row"><span>Regular Holiday</span><span></span><span id="out-reg-hol" class="ps-right">0.00</span></div>
     <div class="ps-row"><span>Special non-working Holiday</span><span></span><span id="out-spec-hol" class="ps-right">0.00</span></div>
@@ -192,6 +196,8 @@
 
     function resetForm() {
         document.getElementById('regOT').value = 0;
+        document.getElementById('sixOT').value = 0;
+        document.getElementById('sevenOT').value = 0;
         document.getElementById('satOT').value = 0;
         document.getElementById('sunOT').value = 0;
         document.getElementById('regHol').value = 0;
@@ -210,12 +216,16 @@
     function calculate() {
         const basicSemi = 5981.25;
         const regRate = 85.9375;
+        const sixRate = 116.19;
+        const sevenRate = 151.044;
         const satRate = 715; 
         const sunRate = 915;
         const dailyRate = 550;
         const specHolidayDaily = 550 * 0.30; 
 
         const regOT = parseFloat(document.getElementById('regOT').value) || 0;
+        const sixOT = parseFloat(document.getElementById('sixOT').value) || 0;
+        const sevenOT = parseFloat(document.getElementById('sevenOT').value) || 0;
         const satDays = parseFloat(document.getElementById('satOT').value) || 0;
         const sunDays = parseFloat(document.getElementById('sunOT').value) || 0;
         const regHolDays = parseFloat(document.getElementById('regHol').value) || 0;
@@ -231,11 +241,13 @@
 
         const absentTotal = absents * dailyRate;
         const otPay = regOT * regRate;
+        const sixPay = sixOT * sixRate;
+        const sevenPay = sevenOT * sevenRate;
         const rdPay = (satDays * satRate) + (sunDays * sunRate);
         const regHolPay = regHolDays * dailyRate;
         const specHolPay = specHolDays * specHolidayDaily;
         
-        const gross = (basicSemi - absentTotal) + otPay + rdPay + regHolPay + specHolPay;
+        const gross = (basicSemi - absentTotal) + otPay + sixPay + sevenPay + rdPay + regHolPay + specHolPay;
         const netPay = gross - totalGov;
         const finalPay = netPay + allowanceValue;
 
@@ -253,6 +265,10 @@
 
             document.getElementById('out-ot-hrs').innerText = regOT;
             document.getElementById('out-ot-amt').innerText = otPay.toFixed(2);
+            document.getElementById('out-six-hrs').innerText = sixOT;
+            document.getElementById('out-six-amt').innerText = sixPay.toFixed(2);
+            document.getElementById('out-seven-hrs').innerText = sevenOT;
+            document.getElementById('out-seven-amt').innerText = sevenPay.toFixed(2);
             document.getElementById('out-rd-amt').innerText = rdPay.toFixed(2);
             document.getElementById('out-reg-hol').innerText = regHolPay.toFixed(2);
             document.getElementById('out-spec-hol').innerText = specHolPay.toFixed(2);
